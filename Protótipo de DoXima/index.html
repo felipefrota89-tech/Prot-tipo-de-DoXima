@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doxima</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="theme-color" content="#0c0d13">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Doxima">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0d13; --bg-2:#0f1118;
+    --panel:#161822; --panel-soft:#1b1e2a;
+    --line:rgba(255,255,255,.07); --line-strong:rgba(255,255,255,.14);
+    --ink:#f1f2f7; --muted:#8d92a8; --muted-dim:#666b80;
+    --amber:#e3a13d; --amber-soft:#f2c274; --amber-dim:rgba(227,161,61,.14); --amber-line:rgba(227,161,61,.4);
+    --green:#54c48d; --green-dim:rgba(84,196,141,.14);
+    --red:#e2665a; --red-dim:rgba(226,102,90,.14);
+    --blue:#6fa8e8; --blue-dim:rgba(111,168,232,.14);
+    --mono:'IBM Plex Mono',monospace; --disp:'Space Grotesk',sans-serif; --sans:'Inter',sans-serif;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.35);
+    --shadow-md:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -12px rgba(0,0,0,.6);
+    --shadow-amber:0 6px 20px -8px rgba(227,161,61,.45);
+    --radius:14px; --radius-sm:9px;
+  }
+  *{box-sizing:border-box;}
+  ::selection{background:var(--amber-dim);color:var(--amber-soft);}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:8px;}
+  ::-webkit-scrollbar-thumb:hover{background:var(--muted-dim);}
+  body{
+    margin:0; color:var(--ink); font-family:var(--sans); min-height:100vh;
+    background:
+      radial-gradient(900px 500px at 15% -10%, rgba(227,161,61,.08), transparent 60%),
+      radial-gradient(700px 500px at 100% 0%, rgba(111,168,232,.05), transparent 55%),
+      var(--bg);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:800px;margin:0 auto;padding:26px 18px 70px;}
+  header{display:flex;align-items:center;gap:14px;padding:6px 2px 26px;border-bottom:1px solid var(--line);margin-bottom:22px;}
+  .nib{
+    width:38px;height:38px;border-radius:11px;flex-shrink:0;
+    background:linear-gradient(150deg,var(--amber-soft),var(--amber) 55%,#8a5a1a);
+    box-shadow:var(--shadow-amber), inset 0 1px 0 rgba(255,255,255,.35);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--disp);font-weight:700;color:#1a1200;font-size:17px;
+  }
+  h1{font-family:var(--disp);font-size:21px;margin:0;letter-spacing:-.01em;}
+  header p{margin:3px 0 0;font-size:12.5px;color:var(--muted);}
+
+  nav{display:flex;gap:5px;margin-bottom:22px;overflow-x:auto;padding-bottom:2px;}
+  nav button{
+    font-family:var(--sans);font-weight:600;font-size:13px;background:transparent;
+    border:1px solid transparent;color:var(--muted);padding:9px 15px;border-radius:999px;
+    cursor:pointer;white-space:nowrap;transition:background .15s ease,color .15s ease,border-color .15s ease;
+  }
+  nav button:hover{color:var(--ink);background:rgba(255,255,255,.04);}
+  nav button.active{background:var(--amber-dim);border-color:var(--amber-line);color:var(--amber-soft);}
+
+  section{display:none;} section.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  .panel{
+    background:linear-gradient(180deg, var(--panel-soft), var(--panel));
+    border:1px solid var(--line); border-radius:var(--radius);
+    padding:20px; margin-bottom:16px; box-shadow:var(--shadow-md);
+  }
+  .panel h2{font-family:var(--disp);font-size:16px;margin:0 0 5px;letter-spacing:-.005em;}
+  .panel .sub{font-size:12.5px;color:var(--muted);margin:0 0 15px;line-height:1.6;}
+
+  label{font-size:11.5px;color:var(--muted);font-weight:600;display:block;margin-bottom:6px;letter-spacing:.02em;text-transform:uppercase;}
+  input[type=number],input[type=text],textarea,select{
+    width:100%;background:var(--bg-2);border:1px solid var(--line);color:var(--ink);
+    padding:10px 12px;border-radius:var(--radius-sm);font-family:var(--mono);font-size:13.5px;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  textarea{resize:vertical;min-height:56px;font-family:var(--sans);}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--amber-line);box-shadow:0 0 0 3px var(--amber-dim);}
+  .row{display:flex;gap:10px;margin-bottom:13px;} .row>div{flex:1;}
+
+  .btn{
+    font-family:var(--sans);font-weight:600;font-size:13.5px;cursor:pointer;border:none;
+    border-radius:10px;padding:11px 17px;transition:transform .12s ease, filter .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:linear-gradient(155deg,var(--amber-soft),var(--amber));color:#1a1200;box-shadow:var(--shadow-amber);}
+  .btn-primary:hover{filter:brightness(1.05);box-shadow:0 8px 26px -8px rgba(227,161,61,.6);}
+  .btn-ghost{background:rgba(255,255,255,.02);border:1px solid var(--line-strong);color:var(--ink);}
+  .btn-ghost:hover{border-color:var(--muted);background:rgba(255,255,255,.05);}
+  .btn-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(226,102,90,.35);}
+  .btn-danger:hover{background:rgba(226,102,90,.22);}
+  .btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
+  .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:11px;}
+
+  .warn-text{font-size:12px;color:var(--red);margin-top:8px;line-height:1.5;}
+  .ok-text{font-size:12px;color:var(--green);margin-top:8px;line-height:1.5;}
+  .info-box{background:var(--blue-dim);border:1px solid rgba(111,168,232,.3);border-radius:var(--radius-sm);padding:11px 13px;font-size:12px;color:var(--ink);line-height:1.6;margin-bottom:13px;}
+  .info-box b{color:var(--blue);}
+
+  canvas{display:block;max-width:100%;border-radius:9px;background:#fff;}
+  video{width:100%;border-radius:12px;background:#000;max-height:320px;object-fit:cover;box-shadow:var(--shadow-md);}
+  .sheet-preview{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:16px;overflow:auto;max-height:600px;}
+  .page-canvas{margin:0 auto 16px;box-shadow:0 2px 5px rgba(0,0,0,.3), 0 12px 28px -10px rgba(0,0,0,.55);border-radius:2px;}
+
+  .mode-tabs{display:flex;gap:6px;margin-bottom:15px;}
+  .mode-tabs button{flex:1;}
+  .capture-mode{display:none;} .capture-mode.active{display:block;animation:fade .2s ease;}
+
+  .scan-status{display:flex;align-items:center;gap:9px;margin:11px 0;font-size:13px;font-family:var(--mono);color:var(--muted);}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--muted-dim);flex-shrink:0;transition:background .2s,box-shadow .2s;}
+  .dot.live{background:var(--green);box-shadow:0 0 0 5px var(--green-dim);}
+
+  .result-card{border-radius:var(--radius);padding:16px;margin-top:13px;border:1px solid var(--line);box-shadow:var(--shadow-md);}
+  .result-card.ok{border-color:rgba(84,196,141,.35);background:linear-gradient(180deg, var(--green-dim), transparent 60%);}
+  .result-card.warn{border-color:rgba(226,102,90,.35);background:linear-gradient(180deg, var(--red-dim), transparent 60%);}
+  .result-card .score{font-family:var(--disp);font-size:27px;font-weight:700;letter-spacing:-.01em;}
+  .result-card .meta{font-size:12px;color:var(--muted);font-family:var(--mono);margin-top:3px;}
+
+  .qblock{border:1px solid var(--line);border-radius:var(--radius-sm);padding:13px;margin-bottom:11px;background:var(--bg-2);transition:border-color .15s ease;}
+  .qblock:focus-within{border-color:var(--amber-line);}
+  .qblock .qhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;}
+  .qblock .qhead span{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.03em;}
+  .alt-row{display:flex;align-items:center;gap:9px;margin-bottom:7px;}
+  .alt-row input[type=radio]{accent-color:var(--amber);flex-shrink:0;width:15px;height:15px;}
+  .alt-row input[type=text]{flex:1;}
+  .qtext{margin-bottom:9px;}
+
+  .detail-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+  .detail-row:last-child{border-bottom:none;}
+  .detail-row .tag{font-family:var(--mono);font-size:10.5px;padding:3px 7px;border-radius:6px;flex-shrink:0;height:fit-content;font-weight:600;}
+  .tag.ok{background:var(--green-dim);color:var(--green);}
+  .tag.miss{background:var(--red-dim);color:var(--red);}
+  .tag.amb{background:rgba(227,161,61,.16);color:var(--amber-soft);}
+
+  table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px;}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;padding:7px 9px;border-bottom:1px solid var(--line);letter-spacing:.04em;text-transform:uppercase;}
+  td{padding:9px;border-bottom:1px solid var(--line);} tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,.02);}
+
+  .stat-row{display:flex;gap:10px;margin-bottom:15px;}
+  .stat{flex:1;background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:13px;text-align:center;}
+  .stat .v{font-family:var(--disp);font-size:21px;font-weight:700;color:var(--amber-soft);}
+  .stat .l{font-size:10.5px;color:var(--muted);margin-top:3px;letter-spacing:.02em;}
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:34px 10px;}
+
+  #toastHost{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;width:min(92vw,460px);}
+  .toast{
+    background:var(--panel-soft);border:1px solid rgba(226,102,90,.4);border-left:3px solid var(--red);
+    color:var(--ink);font-size:12.5px;line-height:1.5;padding:12px 14px;border-radius:10px;
+    box-shadow:var(--shadow-md); animation:toastIn .2s ease;
+  }
+  @keyframes toastIn{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:none;}}
+
+  @media print{
+    body *{visibility:hidden;}
+    #printBatch, #printBatch *{visibility:visible;}
+    #printBatch{position:absolute;top:0;left:0;}
+    .page-canvas{page-break-after:always;box-shadow:none;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="nib">◈</div>
+    <div><h1>Doxima</h1><p>Banco de questões com embaralhamento por prova e correção óptica</p></div>
+  </header>
+
+  <nav>
+    <button class="tab-btn active" data-tab="banco">Banco de Questões</button>
+    <button class="tab-btn" data-tab="provas">Gerar Provas</button>
+    <button class="tab-btn" data-tab="ler">Ler Prova</button>
+    <button class="tab-btn" data-tab="resultados">Resultados</button>
+  </nav>
+
+  <!-- BANCO DE QUESTÕES -->
+  <section id="banco" class="active">
+    <div class="panel">
+      <h2>Banco de questões</h2>
+      <p class="sub">Cada questão fica salva com suas alternativas e a correta marcada. A ordem impressa (das questões e das alternativas) é sorteada por prova — isto aqui é só o conteúdo-base.</p>
+      <div class="row">
+        <div><label>Nº de questões</label><input type="number" id="numQ" min="1" max="30" value="5"></div>
+        <div><label>Alternativas por questão</label>
+          <select id="numAlt"><option value="4">A – D</option><option value="5" selected>A – E</option><option value="3">A – C</option></select>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-ghost" id="buildForm">Gerar formulário em branco</button>
+        <label class="btn btn-ghost" for="importJsonInput" style="cursor:pointer;margin:0;">Importar JSON</label>
+        <input type="file" id="importJsonInput" accept=".json" style="display:none;">
+      </div>
+      <p class="sub" style="margin-top:8px;">O JSON deve ter a forma <code>{"questoes":[{"text","alternatives":[...],"correctIndex","tema"}]}</code> — é o formato que a extração de provas (ENADE/OAB) já produz.</p>
+      <div id="bankForm" style="margin-top:14px;"></div>
+      <div class="actions" id="bankActions" style="display:none;"><button class="btn btn-primary" id="saveBank">Salvar banco de questões</button></div>
+      <p id="bankStatus" class="warn-text"></p>
+    </div>
+  </section>
+
+  <!-- GERAR PROVAS -->
+  <section id="provas">
+    <div class="panel">
+      <h2>Gerar lote de provas</h2>
+      <p class="sub">Cada aluno recebe uma seed única, que embaralha a ordem das questões e das alternativas tanto no caderno quanto na folha de bolhas. O QR da folha carrega a identificação e a seed — é o que permite corrigir certo mesmo com prova diferente.</p>
+      <label>Lista de alunos (um por linha)</label>
+      <textarea id="studentList" placeholder="aluno01&#10;aluno02&#10;aluno03"></textarea>
+      <div class="actions">
+        <button class="btn btn-primary" id="genBatch">Gerar lote</button>
+        <button class="btn btn-ghost" id="printBatchBtn" disabled>Imprimir lote inteiro</button>
+      </div>
+      <p id="batchStatus" class="warn-text"></p>
+      <div class="sheet-preview" style="margin-top:14px;">
+        <div id="printBatch"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LER PROVA -->
+  <section id="ler">
+    <div class="panel">
+      <h2>Ler prova preenchida</h2>
+      <div class="info-box">
+        <b>Como funciona:</b> o QR da folha é decodificado primeiro (identificação + seed). A seed reconstrói a mesma
+        permutação usada na geração, o que traduz cada bolha marcada de volta para a questão e alternativa originais
+        do banco — só então a resposta é comparada com o gabarito real. Confira sempre antes de salvar.
+      </div>
+      <div class="mode-tabs">
+        <button class="btn btn-ghost cap-mode-btn active" data-mode="camera">Câmera</button>
+        <button class="btn btn-ghost cap-mode-btn" data-mode="upload">Enviar foto</button>
+        <button class="btn btn-ghost cap-mode-btn" data-mode="sim">Simular preenchimento</button>
+      </div>
+
+      <div class="capture-mode active" id="mode-camera">
+        <button class="btn btn-primary" id="startCam">Ativar câmera</button>
+        <button class="btn btn-ghost" id="stopCam" style="display:none;">Parar</button>
+        <button class="btn btn-primary" id="captureShot" style="display:none;">Capturar foto</button>
+        <video id="video" playsinline style="margin-top:12px;display:none;"></video>
+        <div class="scan-status"><span class="dot" id="camDot"></span><span id="camStatusText">câmera inativa</span></div>
+      </div>
+
+      <div class="capture-mode" id="mode-upload">
+        <label>Selecione a foto da folha</label>
+        <input type="file" id="uploadInput" accept="image/*">
+      </div>
+
+      <div class="capture-mode" id="mode-sim">
+        <p class="sub">Gera um aluno fictício com seed própria para testar o pipeline completo (embaralhamento + leitura) sem imprimir nada.</p>
+        <label>Identificação (para exibição)</label>
+        <input type="text" id="simId" placeholder="ex: aluno-teste" style="margin-bottom:10px;">
+        <button class="btn btn-ghost" id="genSimSheet">Gerar folha simulada</button>
+        <div class="sheet-preview" style="margin-top:10px;"><canvas id="simCanvas"></canvas></div>
+        <div class="actions">
+          <button class="btn btn-ghost" id="fillCorrectSim" disabled>Preencher tudo certo</button>
+          <button class="btn btn-primary" id="processSim" disabled>Processar leitura</button>
+        </div>
+      </div>
+
+      <div id="omrOutput"></div>
+    </div>
+  </section>
+
+  <!-- RESULTADOS -->
+  <section id="resultados">
+    <div class="panel">
+      <h2>Resultados salvos</h2>
+      <div class="stat-row" id="statRow"></div>
+      <div id="resTableWrap"><p class="empty">Nenhuma correção registrada ainda.</p></div>
+      <div id="temaTurmaWrap"></div>
+      <div class="actions">
+        <button class="btn btn-ghost" id="exportCsv">Exportar CSV</button>
+        <button class="btn btn-danger" id="clearRes">Limpar resultados</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+function showToast(message){
+  let host = document.getElementById('toastHost');
+  if(!host){
+    host = document.createElement('div');
+    host.id = 'toastHost';
+    document.body.appendChild(host);
+  }
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = message;
+  host.appendChild(el);
+  setTimeout(()=> el.remove(), 6000);
+}
+
+window.addEventListener('error', (e)=>{
+  showToast(`Erro interno: ${e.message} (linha ${e.lineno})`);
+});
+window.addEventListener('unhandledrejection', (e)=>{
+  const msg = (e.reason && e.reason.message) ? e.reason.message : String(e.reason);
+  showToast(`Erro interno (promise): ${msg}`);
+});
+
+// ============================================================
+// ESTADO
+// ============================================================
+let bank = null;          // [{id, text, alternatives:[...], correctIndex}]
+let resultados = [];
+let stream = null;
+let batch = [];            // [{id, seed, questionOrder, altOrders, questionsPrinted}]
+
+// ============================================================
+// STORAGE
+// ============================================================
+async function saveData(key, value){
+  try{ localStorage.setItem(key, JSON.stringify(value)); }
+  catch(e){ showToast(`Não foi possível salvar "${key}" neste navegador: ${e.message}`); }
+}
+async function loadData(key){
+  try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; }
+  catch(e){ return null; }
+}
+
+// ============================================================
+// NAVEGAÇÃO
+// ============================================================
+$$('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    $$('.tab-btn').forEach(b=>b.classList.remove('active'));
+    $$('section').forEach(s=>s.classList.remove('active'));
+    btn.classList.add('active');
+    $('#'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab !== 'ler') stopCamera();
+  });
+});
+$$('.cap-mode-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    $$('.cap-mode-btn').forEach(b=>b.classList.remove('active'));
+    $$('.capture-mode').forEach(m=>m.classList.remove('active'));
+    btn.classList.add('active');
+    $('#mode-'+btn.dataset.mode).classList.add('active');
+    if(btn.dataset.mode !== 'camera') stopCamera();
+  });
+});
+
+function letters(n){ return ['A','B','C','D','E'].slice(0,n); }
+
+// ============================================================
+// RNG SEEDÁVEL E EMBARALHAMENTO DETERMINÍSTICO
+// ============================================================
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function shuffleIndices(n, rng){
+  const arr = Array.from({length:n}, (_,i)=>i);
+  for(let i=n-1;i>0;i--){
+    const j = Math.floor(rng()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+function buildPermutation(seed, numQ, numAlt){
+  const rng = mulberry32(seed);
+  const questionOrder = shuffleIndices(numQ, rng);
+  const altOrders = questionOrder.map(()=> shuffleIndices(numAlt, rng));
+  return { questionOrder, altOrders };
+}
+
+// ============================================================
+// BANCO DE QUESTÕES — formulário
+// ============================================================
+$('#buildForm').addEventListener('click', ()=>{
+  const n = Math.max(1, Math.min(30, parseInt($('#numQ').value || 5)));
+  const alt = parseInt($('#numAlt').value);
+  const container = $('#bankForm'); container.innerHTML = '';
+  for(let i=0;i<n;i++){
+    const existing = bank && bank[i] ? bank[i] : null;
+    const block = document.createElement('div'); block.className='qblock';
+    let altsHtml = '';
+    for(let a=0;a<alt;a++){
+      const letter = String.fromCharCode(65+a);
+      const val = existing && existing.alternatives[a] ? existing.alternatives[a] : '';
+      const checked = existing && existing.correctIndex === a ? 'checked' : (a===0 && !existing ? 'checked' : '');
+      altsHtml += `<div class="alt-row">
+        <input type="radio" name="correct-${i}" value="${a}" ${checked}>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--muted);width:14px;">${letter}</span>
+        <input type="text" class="alt-text" data-q="${i}" data-a="${a}" placeholder="Texto da alternativa ${letter}" value="${val.replace(/"/g,'&quot;')}">
+      </div>`;
+    }
+    const temaVal = existing && existing.tema ? existing.tema : '';
+    const temaEspVal = existing && existing.temaEspecifico ? existing.temaEspecifico : '';
+    const baseLegalVal = existing && existing.baseLegal ? existing.baseLegal : '';
+    block.innerHTML = `<div class="qhead"><span>QUESTÃO ${i+1}</span>
+        <input type="text" class="tema-input" data-q="${i}" placeholder="tema/disciplina (opcional)" value="${temaVal.replace(/"/g,'&quot;')}" style="width:auto;flex:1;margin-left:10px;font-family:var(--sans);font-size:11px;padding:4px 8px;">
+      </div>
+      <textarea class="qtext" data-q="${i}" placeholder="Enunciado da questão ${i+1}">${existing ? existing.text : ''}</textarea>
+      ${altsHtml}
+      <div class="row" style="margin-top:8px;margin-bottom:0;">
+        <div><input type="text" class="tema-esp-input" data-q="${i}" placeholder="assunto específico (opcional)" value="${temaEspVal.replace(/"/g,'&quot;')}" style="font-size:11px;padding:6px 8px;"></div>
+        <div><input type="text" class="base-legal-input" data-q="${i}" placeholder="base legal / artigos (opcional)" value="${baseLegalVal.replace(/"/g,'&quot;')}" style="font-size:11px;padding:6px 8px;"></div>
+      </div>`;
+    container.appendChild(block);
+  }
+  $('#bankActions').style.display = 'flex';
+});
+
+$('#importJsonInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let parsed;
+    try{ parsed = JSON.parse(reader.result); }
+    catch(err){ $('#bankStatus').className='warn-text'; $('#bankStatus').textContent='Arquivo não é um JSON válido.'; return; }
+
+    const lista = Array.isArray(parsed) ? parsed : parsed.questoes;
+    if(!Array.isArray(lista) || lista.length===0){
+      $('#bankStatus').className='warn-text';
+      $('#bankStatus').textContent='JSON não contém uma lista de questões em "questoes".';
+      return;
+    }
+
+    const altCounts = lista.map(q => Array.isArray(q.alternatives) ? q.alternatives.length : 0);
+    const numAltDetectado = Math.max(...altCounts);
+    if(altCounts.some(n => n !== numAltDetectado)){
+      $('#bankStatus').className='warn-text';
+      $('#bankStatus').textContent='As questões têm números diferentes de alternativas — o layout da folha exige o mesmo número para todas. Corrija o JSON antes de importar.';
+      return;
+    }
+    const invalidos = lista.filter(q => typeof q.correctIndex !== 'number' || q.correctIndex < 0 || q.correctIndex >= numAltDetectado || !q.text);
+    if(invalidos.length > 0){
+      $('#bankStatus').className='warn-text';
+      $('#bankStatus').textContent = `${invalidos.length} questão(ões) sem texto ou sem correctIndex válido — revise o JSON antes de importar.`;
+      return;
+    }
+
+    bank = lista.map((q,i) => ({
+      id: q.id || ('q'+(i+1)),
+      text: q.text,
+      alternatives: q.alternatives,
+      correctIndex: q.correctIndex,
+      tema: q.tema || '',
+      temaEspecifico: q.tema_especifico || '',
+      baseLegal: q.base_legal || '',
+    }));
+
+    $('#numQ').value = bank.length;
+    const altSelect = $('#numAlt');
+    if(!Array.from(altSelect.options).some(o => parseInt(o.value) === numAltDetectado)){
+      const opt = document.createElement('option');
+      opt.value = numAltDetectado; opt.textContent = 'A – ' + String.fromCharCode(64+numAltDetectado);
+      altSelect.appendChild(opt);
+    }
+    altSelect.value = String(numAltDetectado);
+
+    $('#buildForm').click();
+    $('#bankStatus').className='ok-text';
+    $('#bankStatus').textContent = `${bank.length} questões importadas${parsed.fonte ? ' de "'+parsed.fonte+'"' : ''}. Revise abaixo e clique em "Salvar banco de questões" para confirmar.`;
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+$('#saveBank').addEventListener('click', async ()=>{
+  const n = Math.max(1, Math.min(30, parseInt($('#numQ').value || 5)));
+  const alt = parseInt($('#numAlt').value);
+  const newBank = [];
+  let incomplete = false;
+  for(let i=0;i<n;i++){
+    const text = $(`.qtext[data-q="${i}"]`).value.trim();
+    const alternatives = [];
+    for(let a=0;a<alt;a++){
+      alternatives.push($(`.alt-text[data-q="${i}"][data-a="${a}"]`).value.trim());
+    }
+    const radio = document.querySelector(`input[name="correct-${i}"]:checked`);
+    const correctIndex = radio ? parseInt(radio.value) : 0;
+    const temaInput = document.querySelector(`.tema-input[data-q="${i}"]`);
+    const tema = temaInput ? temaInput.value.trim() : '';
+    const temaEspInput = document.querySelector(`.tema-esp-input[data-q="${i}"]`);
+    const temaEspecifico = temaEspInput ? temaEspInput.value.trim() : '';
+    const baseLegalInput = document.querySelector(`.base-legal-input[data-q="${i}"]`);
+    const baseLegal = baseLegalInput ? baseLegalInput.value.trim() : '';
+    if(!text || alternatives.some(a=>!a)) incomplete = true;
+    const preservedId = (bank && bank[i] && bank[i].id) ? bank[i].id : 'q'+(i+1);
+    newBank.push({ id: preservedId, text, alternatives, correctIndex, tema, temaEspecifico, baseLegal });
+  }
+  bank = newBank;
+  await saveData('bank_doxima', bank);
+  $('#bankStatus').className = incomplete ? 'warn-text' : 'ok-text';
+  $('#bankStatus').textContent = incomplete
+    ? `Banco salvo, mas há campos vazios em alguma questão — preencha antes de gerar provas.`
+    : `Banco salvo · ${bank.length} questões, ${alt} alternativas cada.`;
+});
+
+// ============================================================
+// LAYOUT CANÔNICO DA FOLHA DE BOLHAS (independente do conteúdo)
+// ============================================================
+const CANON_W = 600, CANON_H = 800, MARKER_SIZE = 30;
+
+function computeLayout(numQ, numAlt){
+  const markers = {
+    tl:{x:45,y:45}, tr:{x:CANON_W-45,y:45}, bl:{x:45,y:CANON_H-45}, br:{x:CANON_W-45,y:CANON_H-45},
+  };
+  const topY = 250, bottomY = CANON_H - 70;
+  const rowH = Math.max(18, Math.min(34, (bottomY-topY)/numQ));
+  const opts = letters(numAlt);
+  const colStart = 190, colStep = Math.min(80, (CANON_W-230)/(numAlt-1||1));
+  const questions = [];
+  for(let i=0;i<numQ;i++){
+    const y = topY + rowH*i + rowH/2;
+    const options = opts.map((letter,oi)=>({ letter, x: colStart + colStep*oi, y, idx:oi }));
+    questions.push({ q:i+1, y, options });
+  }
+  const bubbleR = Math.max(6, Math.min(11, rowH*0.34));
+  return { markers, questions, bubbleR, rowH };
+}
+
+function drawAnswerSheet(ctx, id, layout, filledCols){
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,CANON_W,CANON_H);
+  ctx.fillStyle = '#000';
+  [layout.markers.tl, layout.markers.tr, layout.markers.bl, layout.markers.br].forEach(m=>{
+    ctx.fillRect(m.x-MARKER_SIZE/2, m.y-MARKER_SIZE/2, MARKER_SIZE, MARKER_SIZE);
+  });
+  ctx.font = '600 15px Arial'; ctx.fillText('DOXIMA — FOLHA DE RESPOSTAS', 100, 30);
+  ctx.font = '12px monospace'; ctx.fillText('ID: ' + id, 100, 200);
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+  ctx.strokeRect(90, 90, 100, 100);
+  ctx.font = '11px monospace';
+  layout.questions.forEach(row=>{
+    ctx.fillStyle = '#000';
+    ctx.fillText('Q'+row.q, 110, row.y+4);
+    row.options.forEach(opt=>{
+      ctx.beginPath();
+      ctx.arc(opt.x, opt.y, layout.bubbleR, 0, Math.PI*2);
+      ctx.lineWidth = 1.6; ctx.strokeStyle = '#000'; ctx.stroke();
+      ctx.font = '9px monospace'; ctx.textAlign='center';
+      ctx.fillText(opt.letter, opt.x, opt.y - layout.bubbleR - 4);
+      ctx.textAlign='left';
+      const filled = filledCols && filledCols[row.q-1] === opt.idx;
+      if(filled){ ctx.beginPath(); ctx.arc(opt.x, opt.y, layout.bubbleR-2.5, 0, Math.PI*2); ctx.fillStyle='#000'; ctx.fill(); }
+    });
+  });
+}
+
+function renderQrInto(canvas, x, y, size, text){
+  const holder = document.createElement('div');
+  new QRCode(holder, { text, width:size, height:size, correctLevel: QRCode.CorrectLevel.M });
+  return new Promise(resolve=>{
+    setTimeout(()=>{
+      const img = holder.querySelector('img') || holder.querySelector('canvas');
+      canvas.getContext('2d').drawImage(img, x, y, size, size);
+      resolve();
+    }, 120);
+  });
+}
+
+// ============================================================
+// CADERNO DE PROVA (páginas com o enunciado embaralhado)
+// ============================================================
+function wrapText(ctx, text, x, y, maxWidth, lineHeight){
+  const words = text.split(' ');
+  let line = '';
+  for(let n=0;n<words.length;n++){
+    const test = line + words[n] + ' ';
+    if(ctx.measureText(test).width > maxWidth && n>0){
+      ctx.fillText(line, x, y);
+      line = words[n] + ' ';
+      y += lineHeight;
+    } else { line = test; }
+  }
+  ctx.fillText(line, x, y);
+  return y + lineHeight;
+}
+
+function renderBookletPages(id, questionsPrinted){
+  const pages = [];
+  let canvas, ctx, y;
+  function newPage(){
+    canvas = document.createElement('canvas'); canvas.width = CANON_W; canvas.height = CANON_H;
+    ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0,0,CANON_W,CANON_H);
+    ctx.fillStyle = '#000';
+    ctx.font = '600 15px Arial'; ctx.fillText('DOXIMA — CADERNO DE PROVA', 50, 40);
+    ctx.font = '11px monospace'; ctx.fillText('ID: ' + id, 50, 62);
+    y = 95;
+    pages.push(canvas);
+  }
+  newPage();
+  questionsPrinted.forEach((q, idx)=>{
+    if(y > CANON_H - 150) newPage();
+    ctx.font = '600 13px Arial';
+    y = wrapText(ctx, `${idx+1}. ${q.text}`, 50, y, CANON_W-100, 18) + 4;
+    ctx.font = '12px Arial';
+    q.altsPrinted.forEach((altText, ai)=>{
+      if(y > CANON_H - 60) newPage();
+      const letter = String.fromCharCode(65+ai);
+      y = wrapText(ctx, `(${letter}) ${altText}`, 68, y, CANON_W-118, 16) + 2;
+    });
+    y += 14;
+  });
+  return pages;
+}
+
+// ============================================================
+// GERAR LOTE
+// ============================================================
+function generateStudentPack(id, bank, numAlt){
+  const seed = Math.floor(Math.random()*4294967296);
+  const { questionOrder, altOrders } = buildPermutation(seed, bank.length, numAlt);
+  const questionsPrinted = questionOrder.map((origIdx,i)=>{
+    const q = bank[origIdx];
+    const altsPrinted = altOrders[i].map(origAltIdx => q.alternatives[origAltIdx]);
+    return { text:q.text, altsPrinted };
+  });
+  return { id, seed, questionOrder, altOrders, questionsPrinted };
+}
+
+$('#genBatch').addEventListener('click', async ()=>{
+  if(!bank || bank.length===0){ $('#batchStatus').className='warn-text'; $('#batchStatus').textContent='Salve um banco de questões antes.'; return; }
+  const ids = $('#studentList').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(ids.length===0){ $('#batchStatus').className='warn-text'; $('#batchStatus').textContent='Informe ao menos um aluno.'; return; }
+  const numAlt = bank[0].alternatives.length;
+  batch = ids.map(id => generateStudentPack(id, bank, numAlt));
+  await saveData('sheets_doxima', batch.map(b=>({id:b.id, seed:b.seed})));
+
+  const container = $('#printBatch'); container.innerHTML = '';
+  const layout = computeLayout(bank.length, numAlt);
+  for(const student of batch){
+    const bookletPages = renderBookletPages(student.id, student.questionsPrinted);
+    bookletPages.forEach(p=>{ p.className='page-canvas'; container.appendChild(p); });
+    const sheetCanvas = document.createElement('canvas');
+    sheetCanvas.width = CANON_W; sheetCanvas.height = CANON_H; sheetCanvas.className='page-canvas';
+    drawAnswerSheet(sheetCanvas.getContext('2d'), student.id, layout, null);
+    await renderQrInto(sheetCanvas, 92, 92, 96, JSON.stringify({id:student.id, seed:student.seed}));
+    container.appendChild(sheetCanvas);
+  }
+  $('#printBatchBtn').disabled = false;
+  $('#batchStatus').className='ok-text';
+  $('#batchStatus').textContent = `${batch.length} prova(s) gerada(s), cada uma com embaralhamento próprio.`;
+});
+$('#printBatchBtn').addEventListener('click', ()=> window.print());
+
+// ============================================================
+// NÚCLEO OMR (homografia + detecção de bolhas — layout genérico)
+// ============================================================
+function solveLinear(A, b){
+  const n = A.length;
+  const M = A.map((row,i)=>[...row, b[i]]);
+  for(let col=0; col<n; col++){
+    let pivot = col;
+    for(let r=col+1;r<n;r++){ if(Math.abs(M[r][col])>Math.abs(M[pivot][col])) pivot=r; }
+    [M[col],M[pivot]] = [M[pivot],M[col]];
+    if(Math.abs(M[col][col])<1e-12) continue;
+    for(let r=0;r<n;r++){
+      if(r===col) continue;
+      const f = M[r][col]/M[col][col];
+      for(let c=col;c<=n;c++) M[r][c] -= f*M[col][c];
+    }
+  }
+  return M.map((row,i)=> row[n]/(row[i]||1e-12));
+}
+function computeHomography(src, dst){
+  const A=[], b=[];
+  for(let i=0;i<4;i++){
+    const {x,y}=src[i], {x:X,y:Y}=dst[i];
+    A.push([x,y,1,0,0,0,-X*x,-X*y]); b.push(X);
+    A.push([0,0,0,x,y,1,-Y*x,-Y*y]); b.push(Y);
+  }
+  const h = solveLinear(A,b);
+  return [[h[0],h[1],h[2]],[h[3],h[4],h[5]],[h[6],h[7],1]];
+}
+function applyH(H,x,y){
+  const X=H[0][0]*x+H[0][1]*y+H[0][2];
+  const Y=H[1][0]*x+H[1][1]*y+H[1][2];
+  const W=H[2][0]*x+H[2][1]*y+H[2][2];
+  return [X/W, Y/W];
+}
+function invert3x3(m){
+  const [[a,b,c],[d,e,f],[g,h,i]]=m;
+  const A=e*i-f*h, B=-(d*i-f*g), C=d*h-e*g;
+  const D=-(b*i-c*h), E=a*i-c*g, F=-(a*h-b*g);
+  const G=b*f-c*e, Hh=-(a*f-c*d), I=a*e-b*d;
+  const det=a*A+b*B+c*C;
+  if(Math.abs(det)<1e-12) return null;
+  return [[A/det,D/det,G/det],[B/det,E/det,Hh/det],[C/det,F/det,I/det]];
+}
+function findBlobs(bin,w,h,minArea){
+  const visited = new Uint8Array(w*h);
+  const blobs = [];
+  const stack = new Int32Array(w*h);
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      const idx = y*w+x;
+      if(bin[idx]!==1 || visited[idx]) continue;
+      let sp=0; stack[sp++]=idx; visited[idx]=1;
+      let area=0, sx=0, sy=0, minX=x, maxX=x, minY=y, maxY=y;
+      while(sp>0){
+        const cur = stack[--sp];
+        const cx = cur % w, cy = (cur / w) | 0;
+        area++; sx+=cx; sy+=cy;
+        if(cx<minX)minX=cx; if(cx>maxX)maxX=cx; if(cy<minY)minY=cy; if(cy>maxY)maxY=cy;
+        const nb = [[cx-1,cy],[cx+1,cy],[cx,cy-1],[cx,cy+1]];
+        for(const [nx,ny] of nb){
+          if(nx<0||ny<0||nx>=w||ny>=h) continue;
+          const nidx = ny*w+nx;
+          if(bin[nidx]===1 && !visited[nidx]){ visited[nidx]=1; stack[sp++]=nidx; }
+        }
+      }
+      if(area>=minArea) blobs.push({area, cx:sx/area, cy:sy/area, minX,maxX,minY,maxY, w:maxX-minX+1, h:maxY-minY+1});
+    }
+  }
+  return blobs;
+}
+function findMarkers(blobs,w,h){
+  const quad = {
+    tl:b=>b.cx<w/2 && b.cy<h/2, tr:b=>b.cx>=w/2 && b.cy<h/2,
+    bl:b=>b.cx<w/2 && b.cy>=h/2, br:b=>b.cx>=w/2 && b.cy>=h/2,
+  };
+  const result = {};
+  for(const key of Object.keys(quad)){
+    const cands = blobs.filter(b=>{
+      const aspect = b.w/b.h, fillRatio = b.area/(b.w*b.h);
+      return quad[key](b) && aspect>0.5 && aspect<2 && fillRatio>0.5;
+    });
+    if(cands.length===0) return null;
+    cands.sort((a,b)=>b.area-a.area);
+    result[key]=cands[0];
+  }
+  return result;
+}
+function otsuThreshold(gray){
+  const hist = new Array(256).fill(0);
+  for(let i=0;i<gray.length;i++) hist[gray[i]]++;
+  const total = gray.length;
+  let sum=0; for(let t=0;t<256;t++) sum += t*hist[t];
+  let sumB=0, wB=0, wF=0, maxVar=0, threshold=127;
+  for(let t=0;t<256;t++){
+    wB += hist[t]; if(wB===0) continue;
+    wF = total-wB; if(wF===0) break;
+    sumB += t*hist[t];
+    const mB = sumB/wB, mF = (sum-sumB)/wF;
+    const varBetween = wB*wF*(mB-mF)*(mB-mF);
+    if(varBetween>maxVar){ maxVar=varBetween; threshold=t; }
+  }
+  return threshold;
+}
+function decodeQR(sourceCanvas){
+  const maxW = 900;
+  const scale = Math.min(1, maxW/sourceCanvas.width);
+  const w = Math.round(sourceCanvas.width*scale), h = Math.round(sourceCanvas.height*scale);
+  const c = document.createElement('canvas'); c.width=w; c.height=h;
+  c.getContext('2d').drawImage(sourceCanvas,0,0,w,h);
+  const imgData = c.getContext('2d').getImageData(0,0,w,h);
+  const code = jsQR(imgData.data, w, h);
+  return code ? code.data : null;
+}
+function processOMR(sourceCanvas, layout){
+  const maxW = 520;
+  const scale = Math.min(1, maxW/sourceCanvas.width);
+  const w = Math.round(sourceCanvas.width*scale), h = Math.round(sourceCanvas.height*scale);
+  const work = document.createElement('canvas'); work.width=w; work.height=h;
+  const wctx = work.getContext('2d');
+  wctx.drawImage(sourceCanvas, 0,0,w,h);
+  const imgData = wctx.getImageData(0,0,w,h);
+  const gray = new Uint8Array(w*h);
+  for(let i=0;i<w*h;i++){
+    const r=imgData.data[i*4], g=imgData.data[i*4+1], b=imgData.data[i*4+2];
+    gray[i] = Math.round(0.299*r+0.587*g+0.114*b);
+  }
+  const threshold = otsuThreshold(gray);
+  const bin = new Uint8Array(w*h);
+  for(let i=0;i<w*h;i++) bin[i] = gray[i] < threshold ? 1 : 0;
+
+  const minArea = (w*h)*0.0005;
+  const blobs = findBlobs(bin, w, h, minArea);
+  const markers = findMarkers(blobs, w, h);
+  if(!markers) return { error: 'Não foi possível localizar os 4 marcadores dos cantos. Melhore o enquadramento/iluminação e tente novamente.' };
+
+  const src = [
+    {x:markers.tl.cx,y:markers.tl.cy}, {x:markers.tr.cx,y:markers.tr.cy},
+    {x:markers.bl.cx,y:markers.bl.cy}, {x:markers.br.cx,y:markers.br.cy},
+  ];
+  const dst = [layout.markers.tl, layout.markers.tr, layout.markers.bl, layout.markers.br];
+  const H = computeHomography(src, dst);
+  const Hinv = invert3x3(H);
+  if(!Hinv) return { error: 'Falha ao calcular a transformação geométrica (marcadores mal posicionados).' };
+
+  const answers = [];
+  const debugPoints = [];
+  layout.questions.forEach(row=>{
+    const scores = row.options.map(opt=>{
+      const [sx, sy] = applyH(Hinv, opt.x, opt.y);
+      let sum=0, count=0;
+      const r = Math.max(2, Math.round((w/CANON_W)*layout.bubbleR*0.6));
+      for(let dy=-r;dy<=r;dy++){
+        for(let dx=-r;dx<=r;dx++){
+          const px = Math.round(sx+dx), py = Math.round(sy+dy);
+          if(px<0||py<0||px>=w||py>=h) continue;
+          sum += gray[py*w+px]; count++;
+        }
+      }
+      const mean = count>0 ? sum/count : 255;
+      debugPoints.push({sx, sy, mean});
+      return { idx: opt.idx, letter: opt.letter, mean };
+    });
+    scores.sort((a,b)=>a.mean-b.mean);
+    const darkest = scores[0], second = scores[1];
+    const isDark = darkest.mean < threshold - 8;
+    const hasMargin = (second.mean - darkest.mean) > 18;
+    let colIndex = null, status = 'blank';
+    if(isDark && hasMargin){ colIndex = darkest.idx; status = 'ok'; }
+    else if(isDark && !hasMargin){ status = 'ambiguous'; }
+    answers.push({ q: row.q, colIndex, status });
+  });
+
+  return { answers, threshold, markers: src, workCanvas: work, debugPoints };
+}
+function drawDebugOverlay(work, result){
+  const ctx = work.getContext('2d');
+  ctx.lineWidth = 2;
+  result.markers.forEach(m=>{
+    ctx.strokeStyle = '#5b9fe0';
+    ctx.beginPath(); ctx.arc(m.x, m.y, 6, 0, Math.PI*2); ctx.stroke();
+  });
+  result.debugPoints.forEach(p=>{
+    ctx.beginPath(); ctx.arc(p.sx, p.sy, 3, 0, Math.PI*2);
+    ctx.fillStyle = p.mean < result.threshold-8 ? '#4fb87e' : '#e0604f55';
+    ctx.fill();
+  });
+  return work;
+}
+
+// ============================================================
+// AGREGAÇÃO DE DESEMPENHO POR TEMA/ASSUNTO
+// ============================================================
+function aggregateByTema(details){
+  const map = {};
+  details.forEach(d=>{
+    const t = d.tema || 'Sem tema';
+    if(!map[t]) map[t] = { tema:t, hits:0, total:0 };
+    map[t].total++;
+    if(d.ok) map[t].hits++;
+  });
+  return Object.values(map)
+    .map(x => ({ ...x, pct: Math.round((x.hits/x.total)*100) }))
+    .sort((a,b)=> a.pct - b.pct);
+}
+function renderTemaTable(temas, titulo){
+  if(temas.length===0) return '';
+  const rows = temas.map(t=>{
+    const cls = t.pct >= 70 ? 'ok' : (t.pct >= 40 ? 'amb' : 'miss');
+    return `<div class="detail-row">
+      <div>${t.tema}</div>
+      <span class="tag ${cls}">${t.hits}/${t.total} · ${t.pct}%</span>
+    </div>`;
+  }).join('');
+  return `<div style="margin-top:14px;"><div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:6px;">${titulo}</div>${rows}</div>`;
+}
+
+// ============================================================
+// PIPELINE COMPLETO: QR -> bolhas -> desembaralhar -> corrigir
+// ============================================================
+async function runPipeline(sourceCanvas){
+  if(!bank || bank.length===0){ $('#omrOutput').innerHTML = `<p class="warn-text">Salve um banco de questões antes de ler provas.</p>`; return; }
+
+  const qrText = decodeQR(sourceCanvas);
+  if(!qrText){ $('#omrOutput').innerHTML = `<p class="warn-text">QR não localizado na imagem. Garanta que ele esteja visível, nítido e bem iluminado.</p>`; return; }
+  let parsed;
+  try{ parsed = JSON.parse(qrText); }catch(e){
+    $('#omrOutput').innerHTML = `<p class="warn-text">QR lido não tem o formato esperado.</p>`; return;
+  }
+  if(!parsed.id || typeof parsed.seed !== 'number'){
+    $('#omrOutput').innerHTML = `<p class="warn-text">QR não contém identificação e seed válidas.</p>`; return;
+  }
+
+  const numAlt = bank[0].alternatives.length;
+  const layout = computeLayout(bank.length, numAlt);
+  const result = processOMR(sourceCanvas, layout);
+  if(result.error){ $('#omrOutput').innerHTML = `<p class="warn-text">${result.error}</p>`; return; }
+  const overlay = drawDebugOverlay(result.workCanvas, result);
+
+  const { questionOrder, altOrders } = buildPermutation(parsed.seed, bank.length, numAlt);
+  let hits = 0;
+  const detail = questionOrder.map((origIdx, i)=>{
+    const q = bank[origIdx];
+    const ans = result.answers[i];
+    let origAltIdx = null, ok = false;
+    if(ans.status === 'ok'){ origAltIdx = altOrders[i][ans.colIndex]; ok = origAltIdx === q.correctIndex; }
+    if(ok) hits++;
+    return {
+      origIndex: origIdx, questionText: q.text, status: ans.status, ok,
+      correctText: q.alternatives[q.correctIndex],
+      givenText: origAltIdx !== null ? q.alternatives[origAltIdx] : null,
+      printedRow: i+1, tema: q.tema || 'Sem tema',
+      temaEspecifico: q.temaEspecifico || '', baseLegal: q.baseLegal || '',
+    };
+  }).sort((a,b)=>a.origIndex-b.origIndex);
+
+  const total = bank.length;
+  const pct = ((hits/total)*100).toFixed(1);
+  const record = { id: parsed.id, score:hits, total, pct, date:new Date().toLocaleString('pt-BR'), detail };
+  renderOmrOutput(record, overlay);
+}
+
+function renderOmrOutput(record, overlayCanvas){
+  const cls = record.pct >= 60 ? 'ok' : 'warn';
+  const ambiguousCount = record.detail.filter(d=>d.status==='ambiguous').length;
+  const rows = record.detail.map(d=>{
+    const tagCls = d.status==='ambiguous' ? 'amb' : (d.ok ? 'ok' : 'miss');
+    const tagText = d.status==='ambiguous' ? 'ambígua' : (d.ok ? 'certa' : 'errada');
+    const mostrarDiagnostico = !d.ok && (d.temaEspecifico || d.baseLegal);
+    const diagnosticoHtml = mostrarDiagnostico ? `<div style="font-size:11px;color:var(--red);margin-top:3px;line-height:1.5;">
+        ${d.temaEspecifico ? `<b>Assunto:</b> ${d.temaEspecifico}<br>` : ''}
+        ${d.baseLegal ? `<b>Base legal:</b> ${d.baseLegal}` : ''}
+      </div>` : '';
+    return `<div class="detail-row" style="align-items:flex-start;">
+      <div>${d.questionText.slice(0,70)}${d.questionText.length>70?'…':''}${diagnosticoHtml}</div>
+      <span class="tag ${tagCls}">${tagText}</span>
+    </div>`;
+  }).join('');
+  const overlayHtml = overlayCanvas ? `<div style="margin-top:12px;"><canvas id="overlayShow"></canvas></div>` : '';
+  const temaHtml = renderTemaTable(aggregateByTema(record.detail), 'DESEMPENHO POR ASSUNTO (ESTE ALUNO)');
+  const detailComTemaEsp = record.detail.map(d => ({...d, tema: d.temaEspecifico || d.tema}));
+  const temaEspHtml = record.detail.some(d=>d.temaEspecifico)
+    ? renderTemaTable(aggregateByTema(detailComTemaEsp), 'DESEMPENHO POR ASSUNTO ESPECÍFICO (ESTE ALUNO)')
+    : '';
+  $('#omrOutput').innerHTML = `
+    <div class="result-card ${cls}">
+      <div class="score">${record.score}/${record.total} <span style="font-size:14px;color:var(--muted);font-weight:400;">(${record.pct}%)</span></div>
+      <div class="meta">aluno: ${record.id} · ${record.date}</div>
+      ${ambiguousCount>0 ? `<p class="warn-text" style="margin:8px 0 0;">${ambiguousCount} questão(ões) ambígua(s) — confira manualmente.</p>` : ''}
+      <div style="margin-top:10px;">${rows}</div>
+      ${temaHtml}
+      ${temaEspHtml}
+      ${overlayHtml}
+      <div class="actions">
+        <button class="btn btn-primary" id="confirmSave">Confirmar e salvar</button>
+        <button class="btn btn-ghost" id="discardResult">Descartar</button>
+      </div>
+    </div>`;
+  if(overlayCanvas){
+    const show = $('#overlayShow');
+    show.width = overlayCanvas.width; show.height = overlayCanvas.height; show.style.width='100%';
+    show.getContext('2d').drawImage(overlayCanvas, 0, 0);
+  }
+  $('#confirmSave').addEventListener('click', async ()=>{
+    resultados.push(record);
+    await saveData('resultados_doxima', resultados);
+    renderResultados();
+    $('#omrOutput').innerHTML = `<p class="ok-text">Resultado de "${record.id}" salvo.</p>`;
+  });
+  $('#discardResult').addEventListener('click', ()=>{ $('#omrOutput').innerHTML=''; });
+}
+
+// ============================================================
+// MODO CÂMERA / UPLOAD
+// ============================================================
+const video = $('#video');
+$('#startCam').addEventListener('click', async ()=>{
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' } });
+    video.srcObject = stream; video.style.display='block'; await video.play();
+    $('#startCam').style.display='none'; $('#stopCam').style.display='inline-block'; $('#captureShot').style.display='inline-block';
+    $('#camDot').classList.add('live'); $('#camStatusText').textContent = 'câmera ativa — enquadre a folha inteira';
+  }catch(e){
+    $('#omrOutput').innerHTML = `<p class="warn-text">Não foi possível acessar a câmera (${e.message}).</p>`;
+  }
+});
+$('#stopCam').addEventListener('click', stopCamera);
+function stopCamera(){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  video.style.display='none'; $('#startCam').style.display='inline-block';
+  $('#stopCam').style.display='none'; $('#captureShot').style.display='none';
+  $('#camDot').classList.remove('live'); $('#camStatusText').textContent='câmera inativa';
+}
+$('#captureShot').addEventListener('click', async ()=>{
+  const c = document.createElement('canvas');
+  c.width = video.videoWidth; c.height = video.videoHeight;
+  c.getContext('2d').drawImage(video, 0, 0);
+  await runPipeline(c);
+});
+$('#uploadInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const img = new Image();
+  img.onload = async ()=>{
+    const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+    c.getContext('2d').drawImage(img, 0, 0);
+    await runPipeline(c);
+  };
+  img.src = URL.createObjectURL(file);
+});
+
+// ============================================================
+// MODO SIMULAÇÃO
+// ============================================================
+let simPack = null;
+let simFilled = [];
+$('#genSimSheet').addEventListener('click', async ()=>{
+  if(!bank || bank.length===0){ $('#omrOutput').innerHTML = `<p class="warn-text">Salve um banco de questões antes.</p>`; return; }
+  const id = $('#simId').value.trim() || 'aluno-teste';
+  const numAlt = bank[0].alternatives.length;
+  simPack = generateStudentPack(id, bank, numAlt);
+  simFilled = new Array(bank.length).fill(null);
+  const layout = computeLayout(bank.length, numAlt);
+  const canvas = $('#simCanvas'); canvas.width = CANON_W; canvas.height = CANON_H;
+  drawAnswerSheet(canvas.getContext('2d'), id, layout, simFilled);
+  await renderQrInto(canvas, 92, 92, 96, JSON.stringify({id, seed:simPack.seed}));
+  $('#processSim').disabled = false; $('#fillCorrectSim').disabled = false;
+});
+$('#simCanvas').addEventListener('click', (e)=>{
+  if(!simPack) return;
+  const numAlt = bank[0].alternatives.length;
+  const layout = computeLayout(bank.length, numAlt);
+  const canvas = $('#simCanvas');
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width/rect.width, scaleY = canvas.height/rect.height;
+  const mx = (e.clientX-rect.left)*scaleX, my = (e.clientY-rect.top)*scaleY;
+  let closest=null, dist=999;
+  layout.questions.forEach(row=>{
+    row.options.forEach(opt=>{
+      const d = Math.hypot(opt.x-mx, opt.y-my);
+      if(d<dist){ dist=d; closest={q:row.q, idx:opt.idx}; }
+    });
+  });
+  if(closest && dist < layout.bubbleR*2.2){
+    simFilled[closest.q-1] = simFilled[closest.q-1]===closest.idx ? null : closest.idx;
+    const id = $('#simId').value.trim() || 'aluno-teste';
+    drawAnswerSheet(canvas.getContext('2d'), id, layout, simFilled);
+    renderQrInto(canvas, 92, 92, 96, JSON.stringify({id, seed:simPack.seed}));
+  }
+});
+$('#fillCorrectSim').addEventListener('click', async ()=>{
+  if(!simPack) return;
+  const numAlt = bank[0].alternatives.length;
+  simFilled = simPack.questionOrder.map((origIdx,i)=>{
+    const correctOrigAlt = bank[origIdx].correctIndex;
+    return simPack.altOrders[i].indexOf(correctOrigAlt);
+  });
+  const id = $('#simId').value.trim() || 'aluno-teste';
+  const layout = computeLayout(bank.length, numAlt);
+  const canvas = $('#simCanvas');
+  drawAnswerSheet(canvas.getContext('2d'), id, layout, simFilled);
+  await renderQrInto(canvas, 92, 92, 96, JSON.stringify({id, seed:simPack.seed}));
+});
+$('#processSim').addEventListener('click', async ()=>{
+  await runPipeline($('#simCanvas'));
+});
+
+// ============================================================
+// RESULTADOS
+// ============================================================
+function renderResultados(){
+  const wrap = $('#resTableWrap'); const statRow = $('#statRow'); const temaWrap = $('#temaTurmaWrap');
+  if(resultados.length===0){ wrap.innerHTML = '<p class="empty">Nenhuma correção registrada ainda.</p>'; statRow.innerHTML=''; temaWrap.innerHTML=''; return; }
+  const avg = (resultados.reduce((a,r)=>a+parseFloat(r.pct),0)/resultados.length).toFixed(1);
+  const max = Math.max(...resultados.map(r=>parseFloat(r.pct))).toFixed(1);
+  const min = Math.min(...resultados.map(r=>parseFloat(r.pct))).toFixed(1);
+  statRow.innerHTML = `
+    <div class="stat"><div class="v">${resultados.length}</div><div class="l">correções</div></div>
+    <div class="stat"><div class="v">${avg}%</div><div class="l">média</div></div>
+    <div class="stat"><div class="v">${max}%</div><div class="l">maior</div></div>
+    <div class="stat"><div class="v">${min}%</div><div class="l">menor</div></div>`;
+  const rows = resultados.slice().reverse().map(r=>`
+    <tr><td>${r.id}</td><td>${r.score}/${r.total}</td><td>${r.pct}%</td><td style="color:var(--muted);">${r.date}</td></tr>`).join('');
+  wrap.innerHTML = `<table><thead><tr><th>Aluno</th><th>Acertos</th><th>%</th><th>Data</th></tr></thead><tbody>${rows}</tbody></table>`;
+
+  const todosDetalhes = resultados.flatMap(r => r.detail || []);
+  temaWrap.innerHTML = renderTemaTable(aggregateByTema(todosDetalhes), `DESEMPENHO POR ASSUNTO — TURMA (${resultados.length} prova${resultados.length>1?'s':''})`);
+  const todosDetalhesEsp = todosDetalhes.map(d => ({...d, tema: d.temaEspecifico || d.tema}));
+  if(todosDetalhes.some(d=>d.temaEspecifico)){
+    temaWrap.innerHTML += renderTemaTable(aggregateByTema(todosDetalhesEsp), `DESEMPENHO POR ASSUNTO ESPECÍFICO — TURMA`);
+  }
+}
+$('#exportCsv').addEventListener('click', ()=>{
+  if(resultados.length===0) return;
+  let csv = 'aluno,acertos,total,percentual,data\n';
+  resultados.forEach(r=>{ csv += `${r.id},${r.score},${r.total},${r.pct},${r.date}\n`; });
+  const blob = new Blob([csv],{type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='resultados_doxima.csv'; a.click();
+  URL.revokeObjectURL(url);
+});
+let clearResArmed = false;
+$('#clearRes').addEventListener('click', async ()=>{
+  if(!clearResArmed){
+    clearResArmed = true;
+    $('#clearRes').textContent = 'Clique de novo para confirmar';
+    setTimeout(()=>{ clearResArmed = false; $('#clearRes').textContent = 'Limpar resultados'; }, 4000);
+    return;
+  }
+  clearResArmed = false;
+  $('#clearRes').textContent = 'Limpar resultados';
+  resultados = [];
+  await saveData('resultados_doxima', resultados);
+  renderResultados();
+});
+
+// ============================================================
+// INIT
+// ============================================================
+(async function init(){
+  const savedBank = await loadData('bank_doxima');
+  const savedRes = await loadData('resultados_doxima');
+  if(savedBank){
+    bank = savedBank;
+    $('#numQ').value = bank.length;
+    $('#numAlt').value = String(bank[0].alternatives.length);
+    $('#buildForm').click();
+    $('#bankStatus').className='ok-text';
+    $('#bankStatus').textContent = `Banco carregado · ${bank.length} questões.`;
+  }
+  if(savedRes) resultados = savedRes;
+  renderResultados();
+})();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js')
+      .catch(err => console.warn('Doxima: registro do service worker falhou', err));
+  });
+}
+</script>
+</body>
+</html>
