@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Doxima · Atividade</title>
+<script src="config.js"></script>
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--ink:#14213d;--mut:#5b6478;--line:#e3ded2;--navy:#14213d;--gold:#c9a227;--ok:#1f7a4d;--okbg:#e6f4ec;--bad:#b3261e;--badbg:#fdeceb;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1524;--card:#18203a;--ink:#eef0f6;--mut:#9aa3ba;--line:#2a3558;--navy:#c9a227;--gold:#c9a227;--ok:#5fd39a;--okbg:#12301f;--bad:#ff8a80;--badbg:#3a1613;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:680px;margin:0 auto;padding:16px}
+header{display:flex;align-items:center;gap:10px;padding:8px 0 14px}
+.logo{width:34px;height:34px;border-radius:9px;background:#14213d;display:grid;place-items:center;color:#c9a227;font-weight:800}
+header b{letter-spacing:.04em}
+h1{font-size:1.25rem;margin:0 0 4px}
+.sub{color:var(--mut);font-size:.9rem;margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+label{display:block;font-weight:600;font-size:.9rem;margin:10px 0 6px}
+input[type=text],input[type=tel]{width:100%;padding:13px;border:1px solid var(--line);border-radius:10px;font-size:1.05rem;background:transparent;color:var(--ink)}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:14px 18px;cursor:pointer;background:#14213d;color:#fff;width:100%;margin-top:14px}
+@media (prefers-color-scheme:dark){button{background:#c9a227;color:#14213d}}
+button:disabled{opacity:.5;cursor:not-allowed}
+.err{color:var(--bad);background:var(--badbg);border-radius:10px;padding:10px 12px;margin-top:12px;font-size:.95rem}
+.q{margin-bottom:14px}
+.q .n{font-size:.8rem;color:var(--mut);font-weight:700;letter-spacing:.06em}
+.q p{margin:4px 0 10px}
+.alt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-bottom:8px;cursor:pointer}
+.alt input{margin-top:4px;accent-color:#14213d;width:18px;height:18px;flex:none}
+.alt.sel{border-color:var(--gold);background:rgba(201,162,39,.10)}
+.alt .l{font-weight:800;min-width:1.2em}
+.bar{position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5;font-size:.85rem;color:var(--mut)}
+.prog{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:6px}
+.prog i{display:block;height:100%;width:0;background:var(--gold);transition:width .2s}
+.score{text-align:center}
+.score .big{font-size:2.6rem;font-weight:800;line-height:1.1}
+.res .alt{cursor:default}
+.res .alt.certa{border-color:var(--ok);background:var(--okbg)}
+.res .alt.errada{border-color:var(--bad);background:var(--badbg)}
+.tag{font-size:.72rem;font-weight:800;margin-left:auto;white-space:nowrap}
+.certa .tag{color:var(--ok)}.errada .tag{color:var(--bad)}
+.just{border-left:4px solid var(--gold);padding:8px 12px;margin-top:10px;font-size:.93rem;background:rgba(201,162,39,.08);border-radius:0 8px 8px 0}
+.just small{display:block;color:var(--mut);margin-top:6px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><div class="logo">D</div><b>DOXIMA</b></header>
+
+  <section id="s-erro" class="hide card"><b id="erroTitulo"></b><p id="erroMsg" class="sub"></p></section>
+
+  <section id="s-login" class="hide card">
+    <h1 id="titulo">Atividade</h1>
+    <p class="sub" id="tipo"></p>
+    <label for="ra">Seu RA (Registro Acadêmico)</label>
+    <input id="ra" type="tel" inputmode="numeric" autocomplete="off" placeholder="Digite apenas o RA">
+    <div id="codeBox" class="hide"><label for="codigo">Código da aula</label><input id="codigo" type="text" inputmode="numeric" autocomplete="off" placeholder="Informado pelo professor"></div>
+    <div id="loginErr" class="err hide"></div>
+    <button id="btnEntrar">Entrar</button>
+  </section>
+
+  <section id="s-quiz" class="hide">
+    <div class="bar"><span id="quem"></span> · <span id="cont">0/0</span><div class="prog"><i id="progBar"></i></div></div>
+    <div id="quizBody"></div>
+    <div id="sendErr" class="err hide"></div>
+    <button id="btnEnviar">Enviar respostas</button>
+    <p class="sub" style="margin-top:10px">O envio é único. Depois de enviar, não é possível refazer.</p>
+  </section>
+
+  <section id="s-res" class="hide">
+    <div class="card score"><div class="sub" id="resQuem"></div><div class="big" id="resNota"></div><div class="sub" id="resPct"></div><div class="sub">Resposta registrada. Você já pode fechar esta página.</div></div>
+    <div id="resBody" class="res"></div>
+  </section>
+</div>
+
+<script>
+(function(){
+  var API = window.DOXIMA_API || '';
+  var params = new URLSearchParams(location.search);
+  var SID = params.get('s') || '';
+  var $ = function(id){return document.getElementById(id)};
+  var estado = {aluno:null, atividade:null, ordem:[], respostas:{}, enviando:false, codigo:''};
+
+  function show(id){ ['s-erro','s-login','s-quiz','s-res'].forEach(function(x){ $(x).classList.toggle('hide', x!==id); }); window.scrollTo(0,0); }
+  function fatal(t,m){ $('erroTitulo').textContent=t; $('erroMsg').textContent=m; show('s-erro'); }
+  function api(qs){ return fetch(API+'?'+qs).then(function(r){return r.json()}); }
+  function post(obj){ return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)}).then(function(r){return r.json()}); }
+
+  // embaralhamento determinístico por RA + atividade (mesmo aluno vê sempre a mesma ordem)
+  function hash(str){ var h=2166136261>>>0; for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)>>>0;} return h; }
+  function rng(seed){ var a=seed>>>0; return function(){ a=(a+0x6D2B79F5)>>>0; var t=a; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61); return ((t^(t>>>14))>>>0)/4294967296; }; }
+  function shuffle(n,r){ var a=[];for(var i=0;i<n;i++)a.push(i); for(var j=n-1;j>0;j--){var k=Math.floor(r()*(j+1));var x=a[j];a[j]=a[k];a[k]=x;} return a; }
+
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
+
+  function init(){
+    if(!API || API.indexOf('COLE-AQUI')===0) return fatal('Sistema não configurado','O endereço do servidor ainda não foi definido (config.js).');
+    if(!SID) return fatal('Link incompleto','Abra a atividade pelo link ou QR Code fornecido pelo professor.');
+    api('action=info&s='+encodeURIComponent(SID)).then(function(r){
+      if(!r.ok) return fatal('Atividade indisponível', r.erro||'Não encontrada.');
+      if(r.estado==='encerrada') return fatal(r.titulo,'Esta atividade já foi encerrada.');
+      if(r.estado==='ainda_nao_abriu') return fatal(r.titulo,'Esta atividade ainda não foi aberta.');
+      $('titulo').textContent=r.titulo; $('tipo').textContent=r.tipo;
+      $('codeBox').classList.toggle('hide', !r.exigeCodigo);
+      show('s-login');
+    }).catch(function(){ fatal('Sem conexão','Não foi possível falar com o servidor. Verifique a internet e recarregue.'); });
+  }
+
+  $('btnEntrar').onclick=function(){
+    var ra=$('ra').value.replace(/\D/g,'') || $('ra').value.trim();
+    var er=$('loginErr'); er.classList.add('hide');
+    if(!ra){ er.textContent='Digite seu RA.'; er.classList.remove('hide'); return; }
+    var btn=$('btnEntrar'); btn.disabled=true; btn.textContent='Verificando...';
+    estado.codigo=$('codigo').value.trim();
+    api('action=entrar&s='+encodeURIComponent(SID)+'&ra='+encodeURIComponent(ra)+'&codigo='+encodeURIComponent(estado.codigo)).then(function(r){
+      btn.disabled=false; btn.textContent='Entrar';
+      if(!r.ok){ er.textContent=r.erro||'Não foi possível entrar.'; er.classList.remove('hide'); return; }
+      estado.aluno=r.aluno; estado.atividade=r.atividade; montar();
+    }).catch(function(){ btn.disabled=false; btn.textContent='Entrar'; er.textContent='Sem conexão. Tente novamente.'; er.classList.remove('hide'); });
+  };
+
+  function montar(){
+    var at=estado.atividade, rnd=rng(hash(SID+'|'+estado.aluno.ra));
+    var ordemQ=shuffle(at.questoes.length,rnd);
+    estado.ordem=ordemQ.map(function(qi){ var q=at.questoes[qi]; return {q:q, alts:shuffle(q.alternatives.length,rnd)}; });
+    $('quem').textContent=estado.aluno.nome.split(' ')[0]+(estado.aluno.turma?' · '+estado.aluno.turma:'');
+    var h='';
+    estado.ordem.forEach(function(o,i){
+      h+='<div class="card q" data-q="'+esc(o.q.id)+'"><div class="n">QUESTÃO '+(i+1)+'</div><p>'+esc(o.q.text)+'</p>';
+      o.alts.forEach(function(oi,pos){
+        h+='<label class="alt"><input type="radio" name="q'+i+'" value="'+oi+'"><span class="l">'+'ABCD'.charAt(pos)+')</span><span>'+esc(o.q.alternatives[oi])+'</span></label>';
+      });
+      h+='</div>';
+    });
+    $('quizBody').innerHTML=h;
+    $('quizBody').onchange=function(ev){
+      var inp=ev.target; if(inp.type!=='radio') return;
+      var card=inp.closest('.q'); estado.respostas[card.getAttribute('data-q')]=Number(inp.value);
+      card.querySelectorAll('.alt').forEach(function(a){a.classList.toggle('sel',a.contains(inp))});
+      var n=Object.keys(estado.respostas).length, t=estado.ordem.length;
+      $('cont').textContent=n+'/'+t; $('progBar').style.width=(100*n/t)+'%';
+    };
+    $('cont').textContent='0/'+estado.ordem.length;
+    show('s-quiz');
+  }
+
+  $('btnEnviar').onclick=function(){
+    if(estado.enviando) return;
+    var t=estado.ordem.length, n=Object.keys(estado.respostas).length, er=$('sendErr'); er.classList.add('hide');
+    if(n<t && !window.__confirmouVazio){ er.textContent='Faltam '+(t-n)+' questão(ões). Toque em "Enviar respostas" de novo para enviar assim mesmo.'; er.classList.remove('hide'); window.__confirmouVazio=true; return; }
+    estado.enviando=true; var btn=$('btnEnviar'); btn.disabled=true; btn.textContent='Enviando...';
+    post({action:'enviar',s:SID,ra:estado.aluno.ra,codigo:estado.codigo,respostas:estado.respostas}).then(function(r){
+      if(!r.ok){ estado.enviando=false; btn.disabled=false; btn.textContent='Enviar respostas'; er.textContent=r.erro||'Falha no envio.'; er.classList.remove('hide'); return; }
+      resultado(r);
+    }).catch(function(){ estado.enviando=false; btn.disabled=false; btn.textContent='Enviar respostas'; er.textContent='Sem conexão. Suas marcações continuam na tela; tente enviar novamente.'; er.classList.remove('hide'); });
+  };
+
+  function resultado(r){
+    $('resQuem').textContent=estado.aluno.nome;
+    $('resNota').textContent=r.acertos+' / '+r.total;
+    $('resPct').textContent=r.pct+'% de acerto';
+    var por={}; r.detalhe.forEach(function(d){por[d.id]=d;});
+    var h='';
+    estado.ordem.forEach(function(o,i){
+      var d=por[o.q.id]; if(!d) return;
+      h+='<div class="card q"><div class="n">QUESTÃO '+(i+1)+' · '+(d.ok?'ACERTOU':'ERROU')+'</div><p>'+esc(o.q.text)+'</p>';
+      o.alts.forEach(function(oi,pos){
+        var cls=oi===d.correta?'certa':(oi===d.escolhida?'errada':'');
+        var tag=oi===d.correta?'CORRETA':(oi===d.escolhida?'SUA RESPOSTA':'');
+        h+='<div class="alt '+cls+'"><span class="l">'+'ABCD'.charAt(pos)+')</span><span>'+esc(o.q.alternatives[oi])+'</span><span class="tag">'+tag+'</span></div>';
+      });
+      if(d.escolhida<0) h+='<div class="sub">Questão em branco.</div>';
+      h+='<div class="just">'+esc(d.justificativa)+(d.base_legal?'<small><b>Base legal:</b> '+esc(d.base_legal)+'</small>':'')+'</div></div>';
+    });
+    $('resBody').innerHTML=h; show('s-res');
+  }
+
+  window.addEventListener('beforeunload',function(e){ if(estado.atividade && !$('s-quiz').classList.contains('hide') && !estado.enviando){e.preventDefault();e.returnValue='';} });
+  init();
+})();
+</script>
+</body>
+</html>
