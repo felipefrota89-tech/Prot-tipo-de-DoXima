@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Doxima · Check-In / Check-Out (professor)</title>
+<script src="config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--ink:#14213d;--mut:#5b6478;--line:#e3ded2;--gold:#c9a227;--ok:#1f7a4d;--bad:#b3261e;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1524;--card:#18203a;--ink:#eef0f6;--mut:#9aa3ba;--line:#2a3558;--ok:#5fd39a;--bad:#ff8a80;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:16px}
+header{display:flex;align-items:center;gap:10px;padding:6px 0 14px}.logo{width:34px;height:34px;border-radius:9px;background:#14213d;color:#c9a227;display:grid;place-items:center;font-weight:800}
+header a{margin-left:auto;color:var(--mut);font-size:.85rem}
+h2{font-size:1.05rem;margin:0 0 10px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+label{display:block;font-weight:600;font-size:.82rem;margin:10px 0 4px;color:var(--mut)}
+input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;font:inherit;background:transparent;color:var(--ink)}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+button,.btn{font:inherit;font-weight:700;border:0;border-radius:9px;padding:10px 14px;cursor:pointer;background:#14213d;color:#fff}
+@media (prefers-color-scheme:dark){button,.btn{background:#c9a227;color:#14213d}}
+button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.qi{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);align-items:flex-start}.qi:first-child{border-top:0}
+.qi small{color:var(--mut)}.pill{font-size:.7rem;font-weight:800;border-radius:20px;padding:2px 8px;background:rgba(201,162,39,.2)}
+.msg{padding:10px 12px;border-radius:9px;margin-top:10px;font-size:.92rem}.msg.ok{background:rgba(31,122,77,.12);color:var(--ok)}.msg.bad{background:rgba(179,38,30,.12);color:var(--bad)}
+table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}th{color:var(--mut);font-size:.75rem;text-transform:uppercase}
+#qrBox{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:12px}#qr{background:#fff;padding:10px;border-radius:10px}
+.hide{display:none}.mono{font-family:ui-monospace,Menlo,monospace;word-break:break-all;font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div class="logo">D</div><b>DOXIMA · Check-In / Check-Out</b><a href="index.html">← Doxima</a></div>
+
+<div class="card">
+  <h2>1. Acesso do professor</h2>
+  <label>Senha de administrador (a mesma do ADMIN_KEY no Apps Script)</label>
+  <input id="key" type="password" autocomplete="off" placeholder="Fica salva só neste navegador">
+  <div id="cfgMsg" class="msg bad hide"></div>
+</div>
+
+<div class="card">
+  <h2>2. Questões</h2>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <label class="btn" for="file" style="margin:0;cursor:pointer">Carregar banco JSON</label>
+    <input id="file" type="file" accept=".json,application/json" class="hide">
+    <button class="sec" id="selIn">Selecionar Check-In</button>
+    <button class="sec" id="selOut">Selecionar Check-Out</button>
+    <button class="sec" id="selNone">Limpar</button>
+    <span id="cnt" style="color:var(--mut)"></span>
+  </div>
+  <div id="lista" style="margin-top:10px"></div>
+</div>
+
+<div class="card">
+  <h2>3. Atividade</h2>
+  <div class="row">
+    <div><label>Título</label><input id="titulo" placeholder="Direito Municipal · Aula 02 · Check-In"></div>
+    <div><label>Tipo</label><select id="tipo"><option>Check-In</option><option>Check-Out</option></select></div>
+    <div><label>Abre em</label><input id="abre" type="datetime-local"></div>
+    <div><label>Fecha em</label><input id="fecha" type="datetime-local"></div>
+    <div><label>Código da aula (opcional, 4 dígitos)</label><input id="codigo" inputmode="numeric" maxlength="6" placeholder="Mostre só na sala"></div>
+  </div>
+  <div style="margin-top:14px"><button id="publicar">Publicar e gerar link / QR</button></div>
+  <div id="pubMsg" class="msg hide"></div>
+  <div id="qrBox" class="hide">
+    <div id="qr"></div>
+    <div><div class="mono" id="linkTxt"></div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button id="copiar">Copiar link</button><button class="sec" id="baixarQR">Baixar QR (PNG)</button></div></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>4. Resultados</h2>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="resId" placeholder="ID da atividade (aparece no link, depois de ?s=)" style="flex:1;min-width:220px"><button id="verRes">Carregar</button><button class="sec" id="csv">Baixar CSV</button></div>
+  <div id="resMsg" class="msg hide"></div>
+  <div id="resTab" style="margin-top:10px;overflow-x:auto"></div>
+</div>
+</div>
+
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var API=window.DOXIMA_API||'', questoes=[], sel={}, ultimo=null, linhas=[];
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function msg(id,t,cls){var e=$(id);e.textContent=t;e.className='msg '+(cls||'')+(t?'':' hide');}
+  try{ $('key').value=localStorage.getItem('doxima_ck_key')||''; }catch(e){}
+  $('key').onchange=function(){ try{localStorage.setItem('doxima_ck_key',$('key').value);}catch(e){} };
+  if(!API||API.indexOf('COLE-AQUI')===0){ $('cfgMsg').textContent='Falta configurar config.js com o endereço do Apps Script.'; $('cfgMsg').classList.remove('hide'); }
+
+  function post(o){return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(o)}).then(function(r){return r.json()});}
+
+  $('file').onchange=function(ev){
+    var f=ev.target.files[0]; if(!f) return;
+    var r=new FileReader(); r.onload=function(){
+      try{
+        var d=JSON.parse(r.result); var q=Array.isArray(d)?d:d.questoes;
+        if(!q||!q.length) throw new Error('JSON sem lista "questoes".');
+        q.forEach(function(x,i){ if(!x.id) x.id='q'+(i+1); if(!x.alternatives||typeof x.correctIndex!=='number') throw new Error('Questão '+(i+1)+' sem alternativas/correctIndex.'); });
+        questoes=q; sel={}; q.forEach(function(x){sel[x.id]=false}); desenhar();
+      }catch(e){ alert('Erro ao ler JSON: '+e.message); }
+    }; r.readAsText(f);
+  };
+  function desenhar(){
+    var h=''; questoes.forEach(function(q,i){
+      h+='<label class="qi"><input type="checkbox" data-id="'+esc(q.id)+'" '+(sel[q.id]?'checked':'')+' style="width:auto;margin-top:5px"><div><b>Q'+(i+1)+'</b> '+(q.bloco?'<span class="pill">'+esc(q.bloco)+'</span> ':'')+esc(q.text.slice(0,140))+(q.text.length>140?'…':'')+'<br><small>'+esc(q.tema_especifico||q.tema||'')+'</small></div></label>';
+    });
+    $('lista').innerHTML=h; cont();
+    $('lista').querySelectorAll('input').forEach(function(c){c.onchange=function(){sel[c.getAttribute('data-id')]=c.checked;cont();}});
+  }
+  function cont(){var n=Object.keys(sel).filter(function(k){return sel[k]}).length;$('cnt').textContent=n+' selecionada(s)';}
+  function marcar(bl){questoes.forEach(function(q){sel[q.id]=(bl==null)?false:q.bloco===bl;});if(bl==='checkin')$('tipo').value='Check-In';if(bl==='checkout')$('tipo').value='Check-Out';desenhar();}
+  $('selIn').onclick=function(){marcar('checkin')};$('selOut').onclick=function(){marcar('checkout')};$('selNone').onclick=function(){marcar(null)};
+
+  function novoId(){var a='abcdefghjkmnpqrstuvwxyz23456789',s='';for(var i=0;i<7;i++)s+=a[Math.floor(Math.random()*a.length)];return s;}
+  function base(){ return location.href.replace(/[^\/]*$/,'')+'aluno.html'; }
+
+  $('publicar').onclick=function(){
+    msg('pubMsg','');
+    var qs=questoes.filter(function(q){return sel[q.id]});
+    if(!$('key').value) return msg('pubMsg','Informe a senha de administrador.','bad');
+    if(!qs.length) return msg('pubMsg','Selecione ao menos uma questão.','bad');
+    if(!$('titulo').value.trim()) return msg('pubMsg','Dê um título à atividade.','bad');
+    var id=novoId();
+    var sessao={id:id,titulo:$('titulo').value.trim(),tipo:$('tipo').value,
+      abre:$('abre').value?new Date($('abre').value).toISOString():'',
+      fecha:$('fecha').value?new Date($('fecha').value).toISOString():'',
+      codigo:$('codigo').value.trim(),
+      questoes:qs.map(function(q){return {id:q.id,text:q.text,alternatives:q.alternatives,correctIndex:q.correctIndex,justificativa:q.justificativa||'',base_legal:q.base_legal||'',tema:q.tema||'',tema_especifico:q.tema_especifico||''}})};
+    $('publicar').disabled=true;
+    post({action:'publicar',key:$('key').value,sessao:sessao}).then(function(r){
+      $('publicar').disabled=false;
+      if(!r.ok) return msg('pubMsg',r.erro||'Falha ao publicar.','bad');
+      ultimo=base()+'?s='+id; msg('pubMsg','Atividade publicada. ID: '+id,'ok');
+      $('linkTxt').textContent=ultimo; $('qrBox').classList.remove('hide'); $('qr').innerHTML='';
+      new QRCode($('qr'),{text:ultimo,width:200,height:200,correctLevel:QRCode.CorrectLevel.M});
+      $('resId').value=id;
+    }).catch(function(){ $('publicar').disabled=false; msg('pubMsg','Sem conexão com o Apps Script.','bad'); });
+  };
+  $('copiar').onclick=function(){ if(navigator.clipboard) navigator.clipboard.writeText(ultimo); };
+  $('baixarQR').onclick=function(){
+    var c=$('qr').querySelector('canvas'); if(!c) return; var a=document.createElement('a'); a.href=c.toDataURL('image/png'); a.download='qr-atividade.png'; a.click();
+  };
+
+  $('verRes').onclick=function(){
+    msg('resMsg','');
+    if(!$('resId').value.trim()) return msg('resMsg','Informe o ID da atividade.','bad');
+    post({action:'resultados',key:$('key').value,s:$('resId').value.trim()}).then(function(r){
+      if(!r.ok) return msg('resMsg',r.erro||'Falha.','bad');
+      linhas=r.linhas; var h='<table><tr><th>RA</th><th>Nome</th><th>Turma</th><th>Acertos</th><th>%</th><th>Marcações</th></tr>',soma=0;
+      linhas.forEach(function(l){soma+=Number(l.pct)||0;h+='<tr><td>'+esc(l.ra)+'</td><td>'+esc(l.nome)+'</td><td>'+esc(l.turma)+'</td><td>'+l.acertos+'/'+l.total+'</td><td>'+l.pct+'</td><td class="mono">'+esc(l.respostas)+'</td></tr>';});
+      h+='</table>'; $('resTab').innerHTML=linhas.length?h:'<p>Nenhuma resposta ainda.</p>';
+      msg('resMsg',linhas.length+' resposta(s). Média: '+(linhas.length?(soma/linhas.length).toFixed(1):0)+'%','ok');
+    }).catch(function(){msg('resMsg','Sem conexão.','bad')});
+  };
+  $('csv').onclick=function(){
+    if(!linhas.length) return;
+    var t='RA;Nome;Turma;Acertos;Total;Percentual\n'+linhas.map(function(l){return [l.ra,l.nome,l.turma,l.acertos,l.total,l.pct].join(';')}).join('\n');
+    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+t],{type:'text/csv'}));a.download='resultados-'+$('resId').value+'.csv';a.click();
+  };
+})();
+</script>
+</body>
+</html>
